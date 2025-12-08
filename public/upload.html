@@ -1,0 +1,28 @@
+<form id="uploadForm">
+<input type="file" name="file" id="file" />
+<select name="privacy" id="privacy">
+<option value="public">Public</option>
+<option value="private">Private</option>
+</select>
+<button>Upload</button>
+</form>
+<script>
+const form = document.getElementById('uploadForm');
+form.addEventListener('submit', async (e) => {
+e.preventDefault();
+const token = localStorage.getItem('token');
+const fd = new FormData();
+fd.append('file', document.getElementById('file').files[0]);
+fd.append('privacy', document.getElementById('privacy').value);
+
+
+const res = await fetch('http://localhost:5000/api/upload', {
+method: 'POST',
+headers: { Authorization: 'Bearer ' + token },
+body: fd
+});
+const data = await res.json();
+console.log(data);
+alert(data.msg || JSON.stringify(data));
+});
+</script>
