@@ -5,6 +5,9 @@ const path = require('path');
 const auth = require('../middleware/auth');
 const FileMeta = require('../models/FileMeta');
 const fs = require("fs");
+const verifyToken = require("../middleware/auth");
+const File = require("../models/File");
+const crypto = require("crypto");
 
 // multer setup
 const storage = multer.diskStorage({
@@ -33,13 +36,21 @@ const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 }, fileFil
 router.post('/upload', auth, upload.single('file'), async (req, res) => {
 try {
 // req.file is the uploaded file, req.body.privacy expected
+
+
+let token = null;
+if (req.body.privacy === "private") {
+    token = crypto.randomBytes(16).toString("hex");
+}
+
 const file = new FileMeta({
 filename: req.file.filename,
 originalName: req.file.originalname,
 path: '/uploads/' + req.file.filename,
 size: req.file.size,
 privacy: req.body.privacy || 'private',
-uploaded_by: req.user.id
+uploaded_by: req.user.id,
+privateToken: token 
 });
 await file.save();
 res.json({ msg: 'File uploaded', file });
@@ -64,16 +75,27 @@ res.json(files);
 });
 
 router.get("/files/:id/download", async (req, res) => {
-  try {
-    const file = await File.findById(req.params.id);
+    try {
+        const token = req.query.token;
+        const file = await File.findById(req.params.id);
 
-    if (!file) return res.status(404).json({ error: "File not found" });
+        if (!file) return res.status(404).json({ message: "File not found" });
 
-    res.download("uploads/" + file.filename, file.originalName);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+        // 🔒 Check private file access
+        if (file.privacy === "private") {
+            if (!token || token !== file.privateToken) {
+                return res.status(403).json({ message: "Unauthorized" });
+            }
+        }
+
+        const filepath = path.join(__dirname, "..", "uploads", file.filename);
+        return res.download(filepath, file.originalName);
+
+    } catch (err) {
+        return res.status(500).json({ message: "Error downloading file" });
+    }
 });
+
 
 
 
