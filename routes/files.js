@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const auth = require('../middleware/auth');
 const FileMeta = require('../models/FileMeta');
-
+import fs from "fs";
 
 // multer setup
 const storage = multer.diskStorage({
@@ -62,6 +62,40 @@ router.get('/my-files', auth, async (req, res) => {
 const files = await FileMeta.find({ uploaded_by: req.user.id });
 res.json(files);
 });
+
+router.get("/files/:id/download", async (req, res) => {
+  try {
+    const file = await File.findById(req.params.id);
+
+    if (!file) return res.status(404).json({ error: "File not found" });
+
+    res.download("uploads/" + file.filename, file.originalName);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+router.delete("/files/:id", auth, async (req, res) => {
+  try {
+    const file = await File.findById(req.params.id);
+
+    if (!file) return res.status(404).json({ error: "File not found" });
+
+    if (file.uploaded_by.toString() !== req.user.id)
+      return res.status(403).json({ error: "Not allowed" });
+
+    fs.unlinkSync("uploads/" + file.filename);
+
+    await File.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "File deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 
 module.exports = router;
