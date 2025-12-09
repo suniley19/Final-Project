@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const auth = require('../middleware/auth');
 const FileMeta = require('../models/FileMeta');
-import fs from "fs";
+const fs = require("fs");
 
 // multer setup
 const storage = multer.diskStorage({

@@ -1,28 +1,34 @@
-<form id="uploadForm">
-<input type="file" name="file" id="file" />
-<select name="privacy" id="privacy">
-<option value="public">Public</option>
-<option value="private">Private</option>
+<h2>Upload File</h2>
+
+<input type="file" id="fileInput">
+<select id="privacy">
+    <option value="public">Public</option>
+    <option value="private">Private</option>
 </select>
-<button>Upload</button>
-</form>
+
+<button onclick="uploadFile()">Upload</button>
+<button onclick="logout()">Logout</button>
+
+<script src="js/auth.js"></script>
+
 <script>
-const form = document.getElementById('uploadForm');
-form.addEventListener('submit', async (e) => {
-e.preventDefault();
-const token = localStorage.getItem('token');
-const fd = new FormData();
-fd.append('file', document.getElementById('file').files[0]);
-fd.append('privacy', document.getElementById('privacy').value);
+async function uploadFile() {
+    const file = document.getElementById("fileInput").files[0];
+    const privacy = document.getElementById("privacy").value;
 
+    if (!file) return alert("Select a file");
 
-const res = await fetch('http://localhost:5000/api/upload', {
-method: 'POST',
-headers: { Authorization: 'Bearer ' + token },
-body: fd
-});
-const data = await res.json();
-console.log(data);
-alert(data.msg || JSON.stringify(data));
-});
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("privacy", privacy);
+
+    const res = await fetch(API + "/upload", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + getToken() },
+        body: formData
+    });
+
+    const out = await res.json();
+    alert(out.message || out.error);
+}
 </script>
