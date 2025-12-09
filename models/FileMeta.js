@@ -9,7 +9,8 @@ size: { type: Number },
 privacy: { type: String, enum: ['public', 'private'], default: 'private' },
 uploaded_by: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 uploaded_at: { type: Date, default: Date.now },
-privateToken: { type: String, required: true }
+privateToken: { type: String, default: null }
+
 });
 
 

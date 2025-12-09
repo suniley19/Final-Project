@@ -1,123 +1,76 @@
+// backend/routes/files.js
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
 const auth = require('../middleware/auth');
 const FileMeta = require('../models/FileMeta');
-const fs = require("fs");
-const verifyToken = require("../middleware/auth");
-const File = require("../models/File");
-const crypto = require("crypto");
+
+// Ensure uploads folder exists
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 
 // multer setup
 const storage = multer.diskStorage({
-destination: function (req, file, cb) {
-cb(null, path.join(__dirname, '..', 'uploads'));
-},
-filename: function (req, file, cb) {
-const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-cb(null, unique + path.extname(file.originalname));
-}
-});
-
-
-function fileFilter (req, file, cb) {
-const allowed = ['.pdf', '.mp4'];
-const ext = path.extname(file.originalname).toLowerCase();
-if (!allowed.includes(ext)) return cb(new Error('Unsupported file type'), false);
-cb(null, true);
-}
-
-
-const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 }, fileFilter });
-
-
-// POST /api/upload (auth required)
-router.post('/upload', auth, upload.single('file'), async (req, res) => {
-try {
-// req.file is the uploaded file, req.body.privacy expected
-
-
-let token = null;
-if (req.body.privacy === "private") {
-    token = crypto.randomBytes(16).toString("hex");
-}
-
-const file = new FileMeta({
-filename: req.file.filename,
-originalName: req.file.originalname,
-path: '/uploads/' + req.file.filename,
-size: req.file.size,
-privacy: req.body.privacy || 'private',
-uploaded_by: req.user.id,
-privateToken: token 
-});
-await file.save();
-res.json({ msg: 'File uploaded', file });
-} catch (err) {
-console.error(err);
-res.status(500).json({ msg: 'Upload failed', error: err.message });
-}
-});
-
-
-// GET /api/public-files
-router.get('/public-files', async (req, res) => {
-const files = await FileMeta.find({ privacy: 'public' }).populate('uploaded_by', 'username');
-res.json(files);
-});
-
-
-// GET /api/my-files (auth required)
-router.get('/my-files', auth, async (req, res) => {
-const files = await FileMeta.find({ uploaded_by: req.user.id });
-res.json(files);
-});
-
-router.get("/files/:id/download", async (req, res) => {
-    try {
-        const token = req.query.token;
-        const file = await File.findById(req.params.id);
-
-        if (!file) return res.status(404).json({ message: "File not found" });
-
-        // 🔒 Check private file access
-        if (file.privacy === "private") {
-            if (!token || token !== file.privateToken) {
-                return res.status(403).json({ message: "Unauthorized" });
-            }
-        }
-
-        const filepath = path.join(__dirname, "..", "uploads", file.filename);
-        return res.download(filepath, file.originalName);
-
-    } catch (err) {
-        return res.status(500).json({ message: "Error downloading file" });
-    }
-});
-
-
-
-
-router.delete("/files/:id", auth, async (req, res) => {
-  try {
-    const file = await File.findById(req.params.id);
-
-    if (!file) return res.status(404).json({ error: "File not found" });
-
-    if (file.uploaded_by.toString() !== req.user.id)
-      return res.status(403).json({ error: "Not allowed" });
-
-    fs.unlinkSync("uploads/" + file.filename);
-
-    await File.findByIdAndDelete(req.params.id);
-
-    res.json({ message: "File deleted" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, unique + path.extname(file.originalname));
   }
 });
 
+function fileFilter (req, file, cb) {
+  const allowed = ['.pdf', '.mp4'];
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (!allowed.includes(ext)) return cb(new Error('Unsupported file type'), false);
+  cb(null, true);
+}
 
+const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 }, fileFilter });
+
+// Upload endpoint with explicit multer error handling
+router.post('/upload', auth, (req, res) => {
+  upload.single('file')(req, res, async (err) => {
+    try {
+      if (err) {
+        // multer error (file too large, wrong type etc.)
+        console.error("Multer error:", err);
+        return res.status(400).json({ error: err.message });
+      }
+
+      // sanity checks
+      if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+
+      const privacy = req.body.privacy === 'public' ? 'public' : 'private';
+
+      let token = null;
+      if (privacy === 'private') {
+        token = crypto.randomBytes(16).toString('hex');
+      }
+
+      const fileDoc = new FileMeta({
+        filename: req.file.filename,
+        originalName: req.file.originalname,
+        path: '/uploads/' + req.file.filename,
+        size: req.file.size,
+        privacy,
+        uploaded_by: req.user.id,
+        privateToken: token
+      });
+
+      await fileDoc.save();
+
+      // Return consistent response keys (message + file)
+      return res.json({ message: 'File uploaded', file: fileDoc });
+    } catch (e) {
+      console.error("Upload route error:", e);
+      return res.status(500).json({ error: e.message });
+    }
+  });
+});
 
 module.exports = router;
