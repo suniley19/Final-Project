@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6. Logout</title>
+    <style>
+        /* General Reset and Page Background */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f4f8; /* Very light, cool background */
+        }
+        /* Container Styling */
+        .container {
+            background-color: #ffffff;
+            padding: 50px 40px; /* More vertical padding */
+            border-radius: 16px; /* Modern, rounded corners */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); /* Pronounced, soft shadow */
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+        /* Icon Styling (Visual feedback) */
+        .icon {
+            font-size: 4em;
+            color: #17a2b8; /* Matching the original H1 color */
+            margin-bottom: 15px;
+            display: block;
+        }
+        /* Header Styling */
+        h1 {
+            color: #17a2b8; 
+            margin-bottom: 10px;
+            font-size: 2em; /* Slightly smaller to leave room for the icon */
+            font-weight: 600;
+        }
+        /* Paragraph Styling */
+        p {
+            color: #4a4a4a;
+            margin-bottom: 35px;
+            font-size: 1.05em;
+            line-height: 1.5;
+        }
+        /* Button Styling */
+        input[type="button"] {
+            background-color: #007bff; /* Primary Blue */
+            color: white;
+            padding: 14px 30px; /* Larger padding */
+            border: none;
+            border-radius: 8px; /* Softer edges */
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 700; /* Bolder text */
+            transition: background-color 0.3s, transform 0.1s;
+            display: inline-block;
+            width: 80%; /* Define width for better centering */
+            max-width: 250px;
+        }
+        input[type="button"]:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px); /* Subtle lift effect */
+        }
+        /* Secondary Message Styling */
+        .thanks {
+            margin-top: 35px !important;
+            font-size: 0.9em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="icon">✅</span>
+        
+        <h1>Logged Out Successfully</h1>
+        
+        <p>You have been safely logged out of your account. Your session data has been cleared.</p>
+        
+        <input type="button" value="Return to Login" onclick="window.location.href='signin.html'">
+        
+        <p class="thanks">Thank you for using our service!</p>
+    </div>
+</body>
+</html>

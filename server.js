@@ -1,27 +1,28 @@
-require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const connectDB = require('./config/db');
-
-
+const dotenv = require('dotenv').config();
+const filecontroll = require('./routes/filesRouter');
+const usercontroll = require('./routes/userRouter')
+const errorHandler = require('./middleware/errorHandler');
+const connectDb = require('./config/dbConnection');
 const app = express();
-connectDB();
-app.use(cors());
-app.use(express.json());
 
+// middleware to connect with mongodb
+connectDb();
+
+// required middleware
+app.use(express.json())
 app.use(express.static('public'));
-app.use(express.urlencoded({ extended: true }));
 
+// user controll routers
+app.use('/api',usercontroll)
 
-// serve uploads statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// file controll routers
+app.use('/api', filecontroll)
 
+// error handeling middleware
+app.use(errorHandler)
 
-// routes
-app.use('/api', require('./routes/auth'));
-app.use('/api', require('./routes/files'));
+app.listen(5000, () => {
+    console.log('server is open at port 5000')
+})
 
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));

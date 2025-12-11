@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Files - Secure View</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #eef1f6;
+            padding: 50px 0;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            text-align: left;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        p {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+        .file-row:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        button {
+            padding: 8px 15px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: background-color 0.3s, opacity 0.3s;
+        }
+        .btn-download {
+            background-color: #2ecc71; /* Green for download */
+            color: white;
+        }
+        .btn-download:hover {
+            background-color: #27ae60;
+        }
+        .btn-delete {
+            background-color: #e74c3c; /* Red for delete */
+            color: white;
+        }
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        .nav-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .nav-links a {
+            color: #3498db;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 600;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        /* Loading State Styling */
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.1em;
+            color: #34495e;
+            display: none; /* Hidden by default */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Uploaded Files</h1>
+        <p>Review and manage your files securely. All filenames are sanitized before display.</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>File Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="fileTableBody">
+                </tbody>
+        </table>
+        
+        <div id="loadingIndicator" class="loading-indicator">
+            Loading files... Please wait.
+        </div>
+
+        <div class="nav-links">
+            <a href="upload.html">Upload New File</a> | <a href="logout.html">Logout</a>
+        </div>
+    </div>
+    <script>
+        const fileTableBody = document.getElementById('fileTableBody');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const API_URL = '/api/public-file'; // Change this if your API endpoint is different
+
+        // --- Event Handlers ---
+
+        const handleDelete = async (fileName) => {
+            if (confirm(`Are you sure you want to delete the file: ${fileName}?`)) {
+                // In a real application, you would send a DELETE request here
+                console.log(`[ACTION] Deleting file: ${fileName}`);
+                alert(`File ${fileName} would be deleted.`);
+                // For demonstration, you might call loadfiles() here to refresh the list
+                // await loadfiles(); 
+            }
+        };
+
+        const handleDownload = (fileName) => {
+            // In a real application, you would navigate/fetch the file here
+            // e.g., window.location.href = `/api/download/${fileName}`;
+            console.log(`[ACTION] Downloading file: ${fileName}`);
+            alert(`Initiating download for ${fileName}.`);
+        };
+
+        // --- Core File Loader ---
+
+        const loadfiles = async () => {
+            fileTableBody.innerHTML = ''; // Clear previous content
+            loadingIndicator.style.display = 'block'; // Show loading indicator
+
+            try {
+                const res = await fetch(API_URL);
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                const data = await res.json();
+                
+                if (data.files && data.files.length > 0) {
+                    data.files.forEach(fileName => {
+                        // **SECURITY FIX: Using safe DOM methods instead of innerHTML concatenation**
+                        const tr = document.createElement('tr');
+                        tr.classList.add('file-row');
+
+                        const tdName = document.createElement('td');
+                        // Use textContent to sanitize input and prevent XSS
+                        tdName.textContent = fileName; 
+                        
+                        const tdActions = document.createElement('td');
+                        
+                        // Delete Button
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.classList.add('btn-delete');
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.addEventListener('click', () => handleDelete(fileName));
+                        
+                        // Download Button
+                        const downloadBtn = document.createElement('button');
+                        downloadBtn.classList.add('btn-download');
+                        downloadBtn.textContent = 'Download';
+                        downloadBtn.addEventListener('click', () => handleDownload(fileName));
+
+                        tdActions.appendChild(deleteBtn);
+                        tdActions.appendChild(downloadBtn);
+                        
+                        tr.appendChild(tdName);
+                        tr.appendChild(tdActions);
+                        
+                        fileTableBody.appendChild(tr);
+                    });
+                } else {
+                    fileTableBody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: #95a5a6;">No files uploaded yet.</td></tr>';
+                }
+
+            } catch (error) {
+                console.error("Failed to load files:", error);
+                fileTableBody.innerHTML = '<tr><td colspan="2" style="text-align: center; color: #e74c3c;">Error loading files. Please try again.</td></tr>';
+            } finally {
+                loadingIndicator.style.display = 'none'; // Hide loading indicator
+            }
+        };
+
+        // Initialize file loading
+        loadfiles();
+
+        // Optional: Expose function globally for manual refresh if needed
+        window.loadfiles = loadfiles;
+    </script>
+</body>
+</html>

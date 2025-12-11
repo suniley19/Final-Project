@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Registration</title>
+    <title>User Sign-in</title>
     <style>
         /* General Setup */
         body {
@@ -18,12 +18,13 @@
         }
         /* Container Card Styling */
         .container {
+            /* Removed the inner div's fixed width to allow CSS max-width to control it */
             background-color: #ffffff;
             padding: 40px;
             border-radius: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             width: 100%;
-            max-width: 380px; /* Standard form width */
+            max-width: 380px; /* Consistent form width */
             box-sizing: border-box;
         }
         h1 {
@@ -72,99 +73,119 @@
             font-size: 1.05em;
             font-weight: 700;
             transition: background-color 0.3s, transform 0.1s;
-            /* Using flexbox for alignment */
             margin-top: 15px; 
         }
         .submit:hover {
             background-color: #0056b3;
             transform: translateY(-1px);
         }
-        /* Footer link for existing users (Good practice for forms) */
-        .login-link {
+        /* Footer link for registration (Good practice for forms) */
+        .register-link {
             margin-top: 25px;
             font-size: 0.9em;
             color: #6c757d;
+            text-align: center;
         }
-        .login-link a {
+        .register-link a {
             color: #007bff;
             text-decoration: none;
             font-weight: 600;
         }
-        .login-link a:hover {
+        .register-link a:hover {
             text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Register</h1>
+        <h1>Sign In</h1>
         <hr>
-        <div class="form-content">
-            <input class="username" type="text" placeholder="Username">
-            <input class="email" type="text" placeholder="Email">
-            <input class="password" type="password" placeholder="Password">
-            <input class="cpassword" type="password" placeholder="Confirm password">
-            
-            <p class="message"></p>
-            
-            <div style="display: flex; justify-content: flex-end;">
-                <button class="submit" onclick="Register()">Submit</button>
-            </div>
+        
+        <input class="email" type="text" placeholder="Email">
+        <input class="password" type="password" placeholder="Password">
+        
+        <p class="message"></p>
+        
+        <div style="display: flex; justify-content: flex-end;">
+            <button class="submit" onclick="signin()">Submit</button>
         </div>
         
-        <div class="login-link">
-            Already have an account? <a href="signin.html">Sign In</a>
+        <div class="register-link">
+            Don't have an account? <a href="register.html">Register</a>
         </div>
     </div>
 
-    <script>
-        const Register = async () => {
-            const username = document.querySelector(".username").value;
-            const email = document.querySelector(".email").value;
-            const password = document.querySelector(".password").value;
-            const cpassword = document.querySelector(".cpassword").value;
-            
+    <script> 
+        // Renamed function to be more descriptive of its purpose
+        const checkTokenAndRedirect = async () => {
             const message = document.querySelector('.message');
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            message.innerHTML = ""; // Clear previous messages
-
-            if (!username || !email || !password || !cpassword) {
-                message.innerHTML = 'All fields must be filled';
-                return;
-            } else if (!emailRegex.test(email)) {
-                message.innerHTML = "Invalid email format";
-                return;
-            } else if (password.length < 8) {
-                message.innerHTML = 'Password must be at least 8 characters long';
-                return;
-            } else if (password !== cpassword) {
-                message.innerHTML = 'Password and confirm password are not the same';
+            const token = JSON.parse(localStorage.getItem('accessToken')) || '';
+            
+            if (!token) {
                 return;
             }
 
             try {
-                const res = await fetch('/api/register', {
+                const res = await fetch('/api/tokenCheck', {
                     method: 'POST',
                     headers: {
-                        'Content-type': 'application/json'
-                    },
-                    body: JSON.stringify({username, email, password})
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
                 });
-                
                 const data = await res.json();
-                
+
                 if (res.ok) {
-                    // Success: Redirect to sign-in page
-                    window.location.href = 'signin.html';
+                    window.location.href = 'upload.html';
                 } else {
-                    // Error: Display message from server
-                    message.innerHTML = data.message || "Registration failed";
+                    // Clear invalid token if validation fails
+                    localStorage.removeItem('accessToken');
+                    message.innerHTML = data.message || 'Session expired. Please sign in again.';
                 }
-            } catch(err) {
-                console.error(err);
-                message.innerHTML = 'Something went wrong';
+            } catch (err) {
+                console.error('Token check error:', err);
+                // Fail silently, but remove token just in case
+                localStorage.removeItem('accessToken');
             }
-        }
+        };
+        checkTokenAndRedirect();
+
+        const signin = async () => {
+            const email = document.querySelector('.email').value;
+            const password = document.querySelector('.password').value;
+            const message = document.querySelector('.message');
+            message.innerHTML = ''; // Clear previous message
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!emailRegex.test(email)) {
+                message.innerHTML = 'Invalid email format';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({email, password})
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    const accessToken = data.accessToken;
+                    // Note: Always store token securely (e.g., HTTP-only cookies). localStorage is shown here for client-side functionality.
+                    localStorage.setItem('accessToken', JSON.stringify(accessToken));
+                    window.location.href = 'upload.html';
+                } else {
+                    message.innerHTML = data.message || 'Sign-in failed. Check your credentials.';
+                }
+            } catch (err) {
+                console.error(err);
+                message.innerHTML = 'Something went wrong. Please try again.';
+            }
+        };
     </script>
 </body>
 </html>

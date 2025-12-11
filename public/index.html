@@ -2,65 +2,96 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Secure File Hosting</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
     <style>
-
-        body {
+        /* 1. Basic Reset & Global Styles */
+body {
+    /* Set a nice, readable font */
     font-family: Arial, sans-serif;
-    background: #f3f3f3;
+    /* Clean background color */
+    background-color: #f4f4f4; 
+    /* Occupy the full viewport */
+    margin: 0;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    justify-content: center; /* Center horizontally */
+    align-items: center;     /* Center vertically */
+    min-height: 100vh;
 }
 
+/* 2. Container Styling */
 .container {
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    width: 350px;
-    text-align: center;
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+    /* White box for the content */
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 8px; /* Soft rounded corners */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    width: 100%;
+    max-width: 400px; /* Keep it narrow and focused */
+    text-align: center; /* Center all block content inside */
 }
 
-.menu {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+/* 3. Heading and Separator */
+h1 {
+    color: #333;
+    margin-top: 0; /* Remove space above the heading */
+    font-size: 24px;
 }
 
-.btn {
+hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 20px 0;
+}
+
+/* 4. Button Base Styling (Shared) */
+a[class^="btn-"] {
+    /* Remove underline */
     text-decoration: none;
-    background: #007bff;
-    padding: 10px;
+    /* Treat links like block elements for padding/margin */
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.3s ease; /* Smooth hover effect */
+    min-width: 120px;
+    text-align: center;
+}
+
+/* 5. Specific Button Styling */
+
+/* Register Button (Primary) */
+.btn-register {
+    background-color: #007bff; /* A standard blue */
     color: white;
-    border-radius: 5px;
-    display: block;
 }
 
-.btn:hover {
-    background: #0056b3;
+.btn-register:hover {
+    background-color: #0056b3;
 }
 
+/* Sign In Button (Secondary/Outline) */
+.btn-signin {
+    background-color: #6c757d; /* A neutral gray */
+    color: white;
+}
+
+.btn-signin:hover {
+    background-color: #5a6268;
+}
     </style>
-
 </head>
 <body>
-
     <div class="container">
-        <h1>Secure File Hosting Web App</h1>
-
-        <p>Welcome! Choose an option below:</p>
-
-        <div class="menu">
-            <a href="./register.html" class="btn">Register</a>
-            <a href="./login.html" class="btn">Login</a>
-            <a href="./upload.html" class="btn">Upload File</a>
-            <a href="./myfiles.html" class="btn">My Files</a>
-            <a href="./downloads.html" class="btn">Public Downloads</a>
+        <h1>Hello and welcome!</h1>
+        <hr>
+        <div style="margin: 16px;">
+            <a class="btn-register" href="./register.html">Register &gt;</a>
+            <a class="btn-signin" href="./signin.html">Sign in &gt;</a>
         </div>
     </div>
 
+    <script src="javascript.js"></script>
 </body>
 </html>

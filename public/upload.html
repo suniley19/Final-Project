@@ -1,39 +1,237 @@
-<h2>Upload File</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3. File Upload</title>
+    <style>
+        /* General Reset and Page Background */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5; /* Lighter, subtle background */
+            padding: 50px 20px;
+            box-sizing: border-box;
+        }
+        /* Container Styling */
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 16px; /* Slightly larger radius for a modern feel */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* More pronounced shadow */
+            width: 100%;
+            max-width: 480px; /* Slightly smaller maximum width for focus */
+            text-align: left;
+        }
+        /* Header and Text Styling */
+        h1 {
+            color: #1a1a2e; /* Darker primary color */
+            margin-bottom: 5px;
+            font-size: 2.2em;
+            border-bottom: 2px solid #ffc107; /* Underline accent */
+            padding-bottom: 10px;
+        }
+        p {
+            color: #4a4a68;
+            margin-bottom: 30px;
+        }
+        /* Label Styling */
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+        /* Input Field Styling (Text/File) */
+        input[type="file"], input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dcdcdc; /* Lighter border */
+            border-radius: 8px; /* Softer edges */
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            background-color: #ffffff;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="file"]:focus, input[type="text"]:focus {
+            border-color: #ffc107; /* Focus highlight */
+            box-shadow: 0 0 5px rgba(255, 193, 7, 0.5);
+            outline: none;
+        }
+        /* File Input Customization (Hides the default input visually, though tricky with just CSS) */
+        input[type="file"] {
+            margin-bottom: 25px; /* Extra space below file input */
+        }
+        /* Access Options (Radio Buttons) */
+        .access-options {
+            margin-bottom: 30px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .access-options label {
+            display: inline-block;
+            margin-bottom: 0;
+            font-weight: normal;
+            cursor: pointer;
+            color: #333;
+        }
+        .access-options input[type="radio"] {
+            margin-right: 5px;
+        }
+        /* Upload Button Styling */
+        input[type="button"] {
+            background-color: #ffc107; /* Primary Action Yellow */
+            color: #1a1a2e; /* Dark text for contrast */
+            padding: 14px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 700;
+            transition: background-color 0.3s, transform 0.1s;
+            display: block; /* Make it full width */
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.3);
+        }
+        input[type="button"]:hover {
+            background-color: #e0a800;
+            transform: translateY(-1px);
+        }
+        /* Message Area Styling */
+        .message {
+            margin-top: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+        /* Navigation Links Styling */
+        .nav-links {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+        }
+        .nav-links a {
+            color: #007bff;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⬆️ Upload a File</h1>
+        <p>Welcome, User! Select a file to upload and set its access level.</p>
+        
+        <label for="fileInput">Select File:</label>
+        <input type="file" id="fileInput" name="userFile">
 
-<input type="file" id="fileInput">
-<select id="privacy">
-    <option value="public">Public</option>
-    <option value="private">Private</option>
-</select>
+        <label for="filename">Custom File Name (No extension needed):</label>
+        <input type="text" id="filename" placeholder="e.g., Q3 Report Draft">
+        
+        <div class="access-options">
+            <input type="radio" id="public" name="access" value="public" checked>
+            <label for="public">Public (Visible to anyone)</label>
+            
+            <input type="radio" id="private" name="access" value="private">
+            <label for="private">Private (Only visible to you)</label>
+        </div>
+        
+        <input type="button" value="Upload File" onclick="uploadfile()">
+        <p style="color: #c82333;" class="message"></p>
+        
+        <div class="nav-links">
+            <a href="view.html">View Files</a> | <a href="logout.html">Logout</a>
+        </div>
+    </div>
+    <script>
+        // Define the API endpoint for easy change, assuming it's relative or globally defined
+        const API = ''; // Use an empty string if the call is relative to the root, or define the base path.
 
-<button onclick="uploadFile()">Upload</button>
-<button onclick="logout()">Logout</button>
+        const uploadfile = async () => {
+            const token = JSON.parse(localStorage.getItem('accessToken'));
+            let filename = document.querySelector('#filename').value;
+            let file = document.querySelector('#fileInput').files[0];
+            const message = document.querySelector('.message');
 
-<script src="js/auth.js"></script>
+            if (!file) {
+                message.innerHTML = 'No file to upload';
+                return;
+            }
+            
+            const privacy = document.querySelector('input[name="access"]:checked').value;
+            const filetype = file.type;
 
-<script>
-const API = "http://localhost:5000/api"; // make sure this is defined
-// getToken() should return token from localStorage
-function getToken(){ return localStorage.getItem('token'); }
+            // Clear previous message
+            message.innerHTML = "";
 
-async function uploadFile() {
-  const file = document.getElementById("fileInput").files[0];
-  const privacy = document.getElementById("privacy").value;
+            // Check file type and append extension
+            if (filetype === 'application/pdf') {
+                filename = filename ? `${filename}.pdf` : file.name;
+            } else if (filetype === 'video/mp4') {
+                filename = filename ? `${filename}.mp4` : file.name;
+            } else {
+                message.innerHTML = 'File must be either pdf or mp4';
+                return;
+            }
+            
+            // If the user didn't enter a custom filename, use the original file's name
+            if (!document.querySelector('#filename').value.trim()) {
+                 filename = file.name;
+            }
 
-  if (!file) return alert("Select a file");
 
-  const formData = new FormData();
-  formData.append("file", file);       // name must match multer .single('file')
-  formData.append("privacy", privacy);
+            let formData = new FormData();
+            formData.append('media', file);
 
-  const res = await fetch(API + "/upload", {
-      method: "POST",
-      headers: { "Authorization": "Bearer " + getToken() }, // OK to set auth
-      body: formData
-  });
+            console.log(`Attempting upload with name: ${filename}, privacy: ${privacy}`);
 
-  const out = await res.json();
-  console.log("Upload response:", out);
-  alert(out.message || out.error || JSON.stringify(out));
-}
-</script>
+            try {    
+                // NOTE: The fetch path is relative and assumed to be correct based on original code.
+                const res = await fetch(`/api/upload?name=${filename}&privacy=${privacy}`, {
+                    method: 'POST',
+                    headers: {
+                        // IMPORTANT: FormData boundary is automatically set by the browser, 
+                        // so do not set 'Content-Type': 'multipart/form-data' explicitly.
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const data = await res.json();
+
+                if (res.ok) {
+                    message.style.color = '#28a745'; // Green for success
+                    message.innerHTML = `File uploaded successfully! ID: ${data.fileId || 'N/A'}`;
+                    // Optionally clear the form here
+                    document.querySelector('#fileInput').value = '';
+                    document.querySelector('#filename').value = '';
+
+                } else {
+                    message.style.color = '#c82333'; // Red for error
+                    message.innerHTML = data.message || `Upload failed with status: ${res.status}`;
+                }
+            }
+            catch(err) {
+                console.error("Fetch Error:", err);
+                message.style.color = '#c82333';
+                message.innerHTML = 'An unexpected error occurred. Check console.';
+            }
+        }
+    </script>
+</body>
+</html>
